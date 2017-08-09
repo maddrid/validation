@@ -2,7 +2,6 @@
 
 class PluginFields {
 
-
     private static $instance;
 // Contain  fields  that have been set manually
 
@@ -10,7 +9,6 @@ class PluginFields {
     private $fields = array();
     private $required = array();
     private $search = array();
-
 
     public static function newInstance() {
         if (!self::$instance instanceof self) {
@@ -28,7 +26,7 @@ class PluginFields {
 
     }
 
-    public function getField($type,$key) {
+    public function getField($type, $key) {
         if (isset($this->fields[$type][$key])) {
             return $this->fields[$type][$key];
         } else {
@@ -39,15 +37,33 @@ class PluginFields {
     public function getFields($type) {
         return $this->fields[$type];
     }
-	public function validFieldType($fieldType){
-	$type = array('item','user','page','comment');
-	if(in_array($fieldType,$type){
-	return $fieldType;
-	}else{
-	return 'item';
-	}
-	
-	}
+
+    /*
+     * Valid field type
+     */
+
+    public function validFieldType($fieldType) {
+        $type = array('item', 'user', 'page', 'comment');
+        if (in_array($fieldType, $type)) {
+            return $fieldType;
+        } else {
+            return false;
+        }
+    }
+
+    public function getPluginFields($plugin) {
+        if (osc_plugin_is_installed($plugin)) {
+            if (!class_exists($plugin . 'Fields')) {
+                if (file_exists(osc_plugins_path() . 'classes/' . $plugin . 'Fields')) {
+                    require_once osc_plugins_path() . 'classes/' . $plugin . 'Fields.php';
+                }
+            }
+            require_once osc_plugins_path() . 'files/plugin_fields.php';
+            $class = call_user_func($plugin . 'Fields::newInstance()');
+            $fields = $class->getFields();
+            return $fields;
+        }
+    }
 
     public function getPlugin($key) {
         if (isset($this->plugins[$key])) {
@@ -61,69 +77,76 @@ class PluginFields {
         return $this->plugins;
     }
 
-    public function getRequired() {
-        return $this->required;
+    /*
+     * required fields by type
+     */
+
+    public function getRequired($type) {
+
+
+        return $this->required[$type];
     }
 
     public function getSearch() {
         return $this->search;
     }
 
-
-    public function setFields($type = 'item',array $fields, $plugin = null) {
+    public function setFields($type = 'item', array $fields, $plugin = null) {
 
         if (!empty($fields)) {
             ksort($fields);
+            $valid = $this->validFieldType($type);
+            if ($valid) {
+
+                foreach ($fields as $key => $field) {
 
 
+                    // Set Field Type
+                    $fields[$key]['type'] = ( empty($fields[$key]['type']) ) ? 'text' : $fields[$key]['type'];
+                    // Set Labels
+                    $fields[$key]['label'] = ( empty($fields[$key]['label']) ) ? __($this->setLabel($key)) : $fields[$key]['label'];
 
 
-            foreach ($fields as $key => $field) {
+                    // Set Required
+                    if (!empty($fields[$key]['required'])) {
+
+                        $this->required[$type][$key] = true;
+                    }
+
+                    if (isset($fields[$key]['rule'])) {
+                        if (strpos($fields[$key]['rule'], 'required') !== false) {
+
+                            if ( !isset( $this->required[$valid][$key])) {
+                                $this->required[$valid][$key] = true;
+                            }
 
 
-                // Set Field Type
-                $fields[$key]['type'] = ( empty($fields[$key]['type']) ) ? 'text' : $fields[$key]['type'];
-                // Set Labels
-                $fields[$key]['label'] = ( empty($fields[$key]['label']) ) ? __($this->setLabel($key)) : $fields[$key]['label'];
-
-
-                // Set Required
-                if (!empty($fields[$key]['required'])) {
-
-                    $this->required[$key] = true;
-                }
-
-                if (isset($fields[$key]['rule'])) {
-                    if (strpos($fields[$key]['rule'], 'required') !== false) {
-                        if (!array_key_exists($this->required, $key)) {
-                          $this->required[$key] = true;
                         }
                     }
 
+
+                    // Set Field Type
+                    if (isset($fields[$key]['type']) && $fields[$key]['type'] == 'private') {
+                        $privaterules[] = $key;
+                    }
+                    if (!empty($fields[$key]['search'])) {
+
+                        $this->search[$key] = true;
+                    }
+
+
+                    osc_run_hook('process_field_hook', $key, $fields[$key]);
                 }
 
 
-                // Set Field Type
-                if (isset($fields[$key]['type']) && $fields[$key]['type'] == 'private') {
-                    $privaterules[] = $key;
-                }
-                if (!empty($fields[$key]['search'])) {
 
-                    $this->search[$key] = true;
+                // $this->private_rules = array_merge($this->private_rules, $privaterules);
+                if ($plugin != null) {
+                    $this->plugins[$plugin] = array_keys($fields);
                 }
 
-
-                osc_run_hook('process_field_hook', $key, $fields[$key]);
+                $this->fields[$valid] = array_merge($this->fields, $fields);
             }
-
-
-
-            $this->private_rules = array_merge($this->private_rules, $privaterules);
-            if ($plugin != null) {
-                $this->plugins[$plugin] = array_keys($fields);
-            }
-			$valid = $this->validFieldType($type);
-            $this->fields[$valid] = array_merge($this->fields, $fields);
         }
     }
 
