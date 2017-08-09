@@ -58,3 +58,5 @@ dd(PluginFields::newInstance()->getSearch());
 
 dd("PluginFields::newInstance()->getPlugins()");
 dd(PluginFields::newInstance()->getPlugins());
+dd("PluginFields::newInstance()->getPlugin('cars_attributes')");
+dd(PluginFields::newInstance()->getPlugin('cars_attributes'));

@@ -21,7 +21,7 @@ require 'helpers.php';
 function validation_install() {
 
 }
-<<<<<<< HEAD
+
 if(!function_exists('dd')){
     function dd($var) {
     echo '<pre>';
@@ -30,18 +30,17 @@ if(!function_exists('dd')){
 }
 
 }
-=======
 
->>>>>>> 6bf0f5ec47c8db86e07fe722fe1d84edbce93a52
+
+
 function validation_uninstall() {
 
 }
    function validation_admin_menu() {
         osc_add_admin_menu_page('TEST', VALIDATION_ADMIN_LINK . 'dashboard.php', 'validation');
-<<<<<<< HEAD
+
         osc_add_admin_submenu_page('validation', 'Plugin Fields', VALIDATION_ADMIN_LINK . 'plugin_fields.php', 'validation_plugin');
-=======
->>>>>>> 6bf0f5ec47c8db86e07fe722fe1d84edbce93a52
+
         osc_add_admin_submenu_page('validation', 'Test', VALIDATION_ADMIN_LINK . 'test_validation.php', 'validation_test');
         osc_add_admin_submenu_page('validation', 'Example', VALIDATION_ADMIN_LINK . 'full_example.php', 'validation_example');
     }
